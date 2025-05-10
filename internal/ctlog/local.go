@@ -68,9 +68,6 @@ func (s *LocalBackend) Upload(ctx context.Context, key string, data []byte, opts
 			s.log.WarnContext(ctx, "local file already exists", "key", key, "path", path)
 			return nil
 		}
-		// As a best effort, try to set the immutable flag if supported by the
-		// OS, and the process has the appropriate capabilities.
-		defer setImmutable(path)
 	}
 	s.log.DebugContext(ctx, "local file write", "key", key,
 		"size", len(data), "path", path, "perms", perms)
@@ -96,7 +93,6 @@ func (s *LocalBackend) Discard(ctx context.Context, key string) error {
 	}
 	path := filepath.Join(s.dir, name)
 	s.log.DebugContext(ctx, "local file delete", "key", key, "path", path)
-	unsetImmutable(path)
 	return os.Remove(path)
 }
 
