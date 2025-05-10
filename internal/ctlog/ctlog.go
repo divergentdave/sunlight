@@ -666,6 +666,19 @@ func (l *Log) RunSequencer(ctx context.Context, period time.Duration) (err error
 	}
 }
 
+func (l *Log) RunSequencerOnce(ctx context.Context) (err error) {
+	defer func() {
+		if err != nil {
+			l.poolMu.Lock()
+			defer l.poolMu.Unlock()
+			l.currentPool.err = err
+			close(l.currentPool.done)
+		}
+	}()
+
+	return l.sequence(ctx)
+}
+
 // sequenceTimeout is the maximum time a whole sequencing can take, but
 // non-fatal network operations (staging bundle and checkpoint uploads) are
 // subject to strictTimeout, as we'd rather fail a pool than accumulate backlog.
