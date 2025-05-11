@@ -154,14 +154,9 @@ func main() {
 		NotAfterLimit: notAfterLimit,
 	}
 
-	// Create the log, if needed.
-	if err := ctlog.CreateLog(ctx, cc); err == ctlog.ErrLogExists {
-		logger.Info("log exists")
-	} else if err != nil {
-		fatalError(logger, "failed to create log", "err", err)
-	}
-
-	// Load the log.
+	// Load the log. We assume the log has already been created. This skips some
+	// less-interesting durability issues around storing the initial snapshot,
+	// etc.
 	l, err := ctlog.LoadLog(ctx, cc)
 	if err != nil {
 		fatalError(logger, "failed to load log", "err", err)

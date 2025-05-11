@@ -183,25 +183,22 @@ func main() {
 		}
 	}
 
-	// Fetch the latest checkpoint from the lock backend. If there is no
-	// checkpoint, that's okay because execution may have stopped before the
-	// initial sequencer run.
+	// Fetch the latest checkpoint from the lock backend.
 	logId := sha256.Sum256(cfgPubKey)
 	lockedCheckpoint, err := db.Fetch(ctx, logId)
-	if err == nil {
-		checkpoint, err := parseCheckpoint(lockedCheckpoint.Bytes())
-		if err != nil {
-			fatalError(logger, "failed to parse checkpoint", "err", err)
-		}
-		// The number of entries in the checkpoint should either match the number of
-		// successful add-chain requests, or it should be one greater if there was a
-		// crash between writing a checkpoint out to the database and returning
-		// success.
-		if checkpoint.N != entryCount && checkpoint.N != entryCount+1 {
-			fatalError(logger, "wrong number of entries", "expected", entryCount, "recovered", checkpoint.N)
-		}
-	} else if err.Error() != "checkpoint not found" {
+	if err != nil {
 		fatalError(logger, "failed to fetch checkpoint", "err", err)
+	}
+	checkpoint, err := parseCheckpoint(lockedCheckpoint.Bytes())
+	if err != nil {
+		fatalError(logger, "failed to parse checkpoint", "err", err)
+	}
+	// The number of entries in the checkpoint should either match the number of
+	// successful add-chain requests, or it should be one greater if there was a
+	// crash between writing a checkpoint out to the database and returning
+	// success.
+	if checkpoint.N != entryCount && checkpoint.N != entryCount+1 {
+		fatalError(logger, "wrong number of entries", "expected", entryCount, "recovered", checkpoint.N)
 	}
 
 	// Load the log, in order to make use of built-in consistency checks.
